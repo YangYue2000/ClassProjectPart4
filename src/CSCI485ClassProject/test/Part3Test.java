@@ -102,7 +102,7 @@ public class Part3Test {
   public void init(){
     tableManager = new TableManagerImpl();
     records = new RecordsImpl();
-    indexes = new IndexesImpl();
+    indexes = new IndexesImpl(records);
   }
 
   @Test

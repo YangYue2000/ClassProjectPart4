@@ -120,7 +120,7 @@ public class Part4Test {
   public void init(){
     tableManager = new TableManagerImpl();
     records = new RecordsImpl();
-    indexes = new IndexesImpl();
+    indexes = new IndexesImpl(records);
     relAlgOperators = new RelationalAlgebraOperatorsImpl();
   }
 

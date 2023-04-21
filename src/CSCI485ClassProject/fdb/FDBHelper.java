@@ -1,5 +1,6 @@
 package CSCI485ClassProject.fdb;
 
+import CSCI485ClassProject.models.Record;
 import com.apple.foundationdb.Database;
 import com.apple.foundationdb.FDB;
 import com.apple.foundationdb.FDBException;
@@ -52,26 +53,27 @@ public class FDBHelper {
     return tx.getRange(Range.startsWith(dir.pack(prefixTuple)), ReadTransaction.ROW_LIMIT_UNLIMITED, isReverse);
   }
 
+  public static AsyncIterable<KeyValue> getKVPairIterableEndBeforePrefixInDirectory(DirectorySubspace dir, Transaction tx, Tuple prefixTuple, boolean isReverse) {
+    Range dirRange = dir.range();
+    KeySelector endKeySelector = KeySelector.firstGreaterOrEqual(dir.pack(prefixTuple));
+    Range range = new Range(dirRange.begin, endKeySelector.getKey());
+    return tx.getRange(range, ReadTransaction.ROW_LIMIT_UNLIMITED, isReverse);
+  }
+
   public static AsyncIterable<KeyValue> getKVPairIterableStartWithPrefixInDirectory(DirectorySubspace dir, Transaction tx, Tuple prefixTuple, boolean isReverse) {
-    if (dir == null) {
-      return null;
-    }
+    Range dirRange = dir.range();
 
-    if (!isReverse) {
-      KeySelector beginKeySelector = KeySelector.firstGreaterOrEqual(dir.pack(prefixTuple));
+//    KeyValue kv = getKVPairIterableWithPrefixInDirectory(dir, tx, prefixTuple, false).iterator().next();
+    KeySelector beginKeySelector = KeySelector.firstGreaterOrEqual(dir.pack(prefixTuple));
+    Range range = new Range(beginKeySelector.getKey(), dirRange.end);
+    return tx.getRange(range, ReadTransaction.ROW_LIMIT_UNLIMITED, isReverse);
+  }
 
-      Range dirRange = dir.range();
-      Range range = new Range(beginKeySelector.getKey(), dirRange.end);
-
-      return tx.getRange(range, ReadTransaction.ROW_LIMIT_UNLIMITED, false);
-    } else {
-      KeySelector endKeySelector = KeySelector.lastLessOrEqual(dir.pack(prefixTuple));
-
-      Range dirRange = dir.range();
-      Range range = new Range(dirRange.begin, endKeySelector.getKey());
-
-      return tx.getRange(range, ReadTransaction.ROW_LIMIT_UNLIMITED, true);
-    }
+  public static AsyncIterable<KeyValue> getKVPairIterableFirstGreaterThanKeyInDirectory(DirectorySubspace dir, Transaction tx, Tuple keyTuple, boolean isReverse) {
+    Range dirRange = dir.range();
+    KeySelector beginKeySelector = KeySelector.firstGreaterThan(dir.pack(keyTuple));
+    Range range = new Range(beginKeySelector.getKey(), dirRange.end);
+    return tx.getRange(range, ReadTransaction.ROW_LIMIT_UNLIMITED, isReverse);
   }
 
   public static void setFDBKVPair(DirectorySubspace tgtSubspace, Transaction tx, FDBKVPair kv) {
@@ -84,6 +86,11 @@ public class FDBHelper {
   public static List<String> getAllDirectSubspaceName(Transaction tx) {
     List<String> subpaths = DirectoryLayer.getDefault().list(tx).join();
     return subpaths;
+  }
+
+  public static List<String> getAllDirectSubspacesNameUnderGivenPath(Transaction tx, List<String> path) {
+    DirectorySubspace dir = openSubspace(tx, path);
+    return dir.list(tx).join();
   }
 
   public static List<FDBKVPair> getAllKeyValuePairsOfSubdirectory(Database db, Transaction tx, List<String> path) {
