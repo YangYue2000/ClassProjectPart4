@@ -33,6 +33,9 @@ public class ComparisonPredicate {
   public String getLeftHandSideAttrName() {
     return leftHandSideAttrName;
   }
+  public String getRightHandSideAttrName() {
+    return rightHandSideAttrName;
+  }
 
   public void setLeftHandSideAttrName(String leftHandSideAttrName) {
     this.leftHandSideAttrName = leftHandSideAttrName;

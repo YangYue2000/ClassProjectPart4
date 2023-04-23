@@ -3,7 +3,7 @@ package CSCI485ClassProject.utils;
 import CSCI485ClassProject.models.ComparisonOperator;
 
 public class ComparisonUtils {
-  public static boolean compareTwoINT(Object obj1, Object obj2, ComparisonOperator cmp) {
+  public static boolean compareTwoINT(Object obj1, Object obj2, Object coefficient, ComparisonOperator cmp) {
     long val1;
     if (obj1 instanceof Integer) {
       val1 = new Long((Integer) obj1);
@@ -18,22 +18,29 @@ public class ComparisonUtils {
       val2 = (long) obj2;
     }
 
+    long co;
+    if (coefficient instanceof Integer) {
+      co = new Long((Integer) coefficient);
+    } else {
+      co = (long) coefficient;
+    }
+
     if (cmp == ComparisonOperator.GREATER_THAN_OR_EQUAL_TO) {
       // >=
-      return val1 >= val2;
+      return val1 >= val2*co;
 
     } else if (cmp == ComparisonOperator.GREATER_THAN) {
       // >
-      return val1 > val2;
+      return val1 > val2*co;
     } else if (cmp == ComparisonOperator.EQUAL_TO) {
       // ==
-      return val1 == val2;
+      return val1 == val2*co;
     } else if (cmp == ComparisonOperator.LESS_THAN) {
       // <
-      return val1 < val2;
+      return val1 < val2*co;
     } else {
       // <=
-      return val1 <= val2;
+      return val1 <= val2*co;
     }
   }
 

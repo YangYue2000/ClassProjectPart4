@@ -20,12 +20,15 @@ public class AssignmentExpression {
   }
 
   private String leftHandSideAttrName; // e.g. Salary = 1.1 * Age
+  public String getLeftAttr() { return leftHandSideAttrName; }
   private AttributeType leftHandSideAttrType;
 
   // either a specific value, or another attribute
   private Object rightHandSideValue = null; // in the example, it is 1.1
+  public Object getRightVal() { return rightHandSideValue; }
   private AlgebraicOperator rightHandSideOperator; // in the example, it is *
   private String rightHandSideAttrName; // in the example, it is Age
+  public String getRightAttr(){ return rightHandSideAttrName; }
   private AttributeType rightHandSideAttrType;
 
   // e.g. Salary = 2000

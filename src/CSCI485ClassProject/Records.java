@@ -1,6 +1,7 @@
 package CSCI485ClassProject;
 
 import CSCI485ClassProject.models.ComparisonOperator;
+import CSCI485ClassProject.models.ComparisonPredicate;
 import CSCI485ClassProject.models.Record;
 
 /**
@@ -36,20 +37,24 @@ public interface Records {
    */
   Cursor openCursor(String tableName, Cursor.Mode mode);
 
-  /**
-   * Open a cursor that iterates a table with a certain predicate.
-   *
-   * Order of the records follow the primary key values' descending order.
-   *
-   * @param tableName the target tableName
-   * @param attrName the target attribute Name
-   * @param attrValue the attribute value for the predicate
-   * @param operator the operator used by the predicate
-   * @param mode the mode of cursor: READ/READ_WRITE
-   * @param isUsingIndex used in Part3
-   *    for READ cursor, true indicates the search should use the index on the given attribute.
-   * @return Cursor
-   */
+  /** Open a cursor for iterator
+   * **/
+  Cursor openCursor(String tableName, ComparisonPredicate predicate, Cursor.Mode mode, boolean isUsingIndex);
+
+    /**
+     * Open a cursor that iterates a table with a certain predicate.
+     *
+     * Order of the records follow the primary key values' descending order.
+     *
+     * @param tableName the target tableName
+     * @param attrName the target attribute Name
+     * @param attrValue the attribute value for the predicate
+     * @param operator the operator used by the predicate
+     * @param mode the mode of cursor: READ/READ_WRITE
+     * @param isUsingIndex used in Part3
+     *    for READ cursor, true indicates the search should use the index on the given attribute.
+     * @return Cursor
+     */
   Cursor openCursor(String tableName, String attrName, Object attrValue, ComparisonOperator operator, Cursor.Mode mode, boolean isUsingIndex);
 
   /**

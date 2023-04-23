@@ -2,14 +2,7 @@ package CSCI485ClassProject;
 
 import CSCI485ClassProject.fdb.FDBHelper;
 import CSCI485ClassProject.fdb.FDBKVPair;
-import CSCI485ClassProject.models.AttributeType;
-import CSCI485ClassProject.models.ComparisonOperator;
-import CSCI485ClassProject.models.IndexRecord;
-import CSCI485ClassProject.models.IndexType;
-import CSCI485ClassProject.models.NonClusteredBPTreeIndexRecord;
-import CSCI485ClassProject.models.NonClusteredHashIndexRecord;
-import CSCI485ClassProject.models.Record;
-import CSCI485ClassProject.models.TableMetadata;
+import CSCI485ClassProject.models.*;
 import CSCI485ClassProject.utils.ComparisonUtils;
 import CSCI485ClassProject.utils.IndexesUtils;
 import com.apple.foundationdb.KeyValue;
@@ -37,8 +30,10 @@ public class Cursor {
   // used by predicate
   private boolean isPredicateEnabled = false;
   private String predicateAttributeName;
-  private Record.Value predicateAttributeValue;
+  private CSCI485ClassProject.models.Record.Value predicateAttributeValue;
   private ComparisonOperator predicateOperator;
+  //predicate for iterator
+  private ComparisonPredicate comparisonPredicate;
 
   // Table Schema Info
   private String tableName;
@@ -54,7 +49,7 @@ public class Cursor {
 
   private AsyncIterator<KeyValue> iterator = null;
 
-  private Record currentRecord = null;
+  private CSCI485ClassProject.models.Record currentRecord = null;
 
   private Transaction tx;
 
@@ -85,7 +80,7 @@ public class Cursor {
   }
 
   // enable the use of index for READ mode
-  public Cursor(String tableName, TableMetadata tableMetadata, String indexedAttrName, ComparisonOperator predicateOperator, Record.Value predicateVal, IndexType indexType, Transaction tx) {
+  public Cursor(String tableName, TableMetadata tableMetadata, String indexedAttrName, ComparisonOperator predicateOperator, CSCI485ClassProject.models.Record.Value predicateVal, IndexType indexType, Transaction tx) {
     this.mode = Mode.READ;
     this.tableName = tableName;
     this.tableMetadata = tableMetadata;
@@ -154,10 +149,16 @@ public class Cursor {
     this.tableMetadata = tableMetadata;
   }
 
-  public void enablePredicate(String attrName, Record.Value value, ComparisonOperator operator) {
+  public void enablePredicate(String attrName, CSCI485ClassProject.models.Record.Value value, ComparisonOperator operator) {
     this.predicateAttributeName = attrName;
     this.predicateAttributeValue = value;
     this.predicateOperator = operator;
+    this.isPredicateEnabled = true;
+  }
+
+  //for iterator
+  public void enablePredicate(ComparisonPredicate comparisonPredicate){
+    this.comparisonPredicate = comparisonPredicate;
     this.isPredicateEnabled = true;
   }
 
@@ -254,8 +255,8 @@ public class Cursor {
     return indexRecord.getPrimaryKeys();
   }
 
-  private Record getRecordByPrimaryKeys(List<Object> primaryKeys) {
-    Record res = null;
+  private CSCI485ClassProject.models.Record getRecordByPrimaryKeys(List<Object> primaryKeys) {
+    CSCI485ClassProject.models.Record res = null;
     if (primaryKeys.isEmpty()) {
       return res;
     }
@@ -280,7 +281,7 @@ public class Cursor {
     return res;
   }
 
-  private Record moveToNextRecord(boolean isInitializing) {
+  private CSCI485ClassProject.models.Record moveToNextRecord(boolean isInitializing) {
     if (!isInitializing && !isInitialized) {
       return null;
     }
@@ -364,13 +365,13 @@ public class Cursor {
     return currentRecord;
   }
 
-  public Record getFirst() {
+  public CSCI485ClassProject.models.Record getFirst() {
     if (isInitialized) {
       return null;
     }
     isInitializedToLast = false;
 
-    Record record = moveToNextRecord(true);
+    CSCI485ClassProject.models.Record record = moveToNextRecord(true);
     if (isPredicateEnabled) {
       while (record != null && !doesRecordMatchPredicate(record)) {
         record = moveToNextRecord(false);
@@ -379,32 +380,55 @@ public class Cursor {
     return record;
   }
 
-  private boolean doesRecordMatchPredicate(Record record) {
-    Object recVal = record.getValueForGivenAttrName(predicateAttributeName);
-    AttributeType recType = record.getTypeForGivenAttrName(predicateAttributeName);
-    if (recVal == null || recType == null) {
-      // attribute not exists in this record
-      return false;
+  private boolean doesRecordMatchPredicate(CSCI485ClassProject.models.Record record) {
+    Object left;
+    AttributeType type;
+    Object right = null;
+    Object coefficient = null;
+    ComparisonOperator operator;
+    if(comparisonPredicate!=null){
+      left = record.getValueForGivenAttrName(comparisonPredicate.getLeftHandSideAttrName());
+      type = comparisonPredicate.getLeftHandSideAttrType();
+      operator = comparisonPredicate.getOperator();
+      //case of 2 attributes in comparison predicate
+      if(comparisonPredicate.getPredicateType()==ComparisonPredicate.Type.TWO_ATTRS){
+        right = record.getValueForGivenAttrName(comparisonPredicate.getRightHandSideAttrName());
+        coefficient = comparisonPredicate.getRightHandSideValue();
+      }
+      //case of 1 attributes in comparison predicate
+      else if(comparisonPredicate.getPredicateType()==ComparisonPredicate.Type.ONE_ATTR){
+        right = comparisonPredicate.getRightHandSideValue();
+        coefficient = new Integer(1);
+      }
     }
-
-    if (recType == AttributeType.INT) {
-      return ComparisonUtils.compareTwoINT(recVal, predicateAttributeValue.getValue(), predicateOperator);
-    } else if (recType == AttributeType.DOUBLE){
-      return ComparisonUtils.compareTwoDOUBLE(recVal, predicateAttributeValue.getValue(), predicateOperator);
-    } else if (recType == AttributeType.VARCHAR) {
-      return ComparisonUtils.compareTwoVARCHAR(recVal, predicateAttributeValue.getValue(), predicateOperator);
+    else {
+      left = record.getValueForGivenAttrName(predicateAttributeName);
+      type = record.getTypeForGivenAttrName(predicateAttributeName);
+      if (left == null || type == null) {
+        // attribute not exists in this record
+        return false;
+      }
+      operator = predicateOperator;
+      right = predicateAttributeValue.getValue();
+      coefficient = new Integer(1);
     }
-
+    if (type == AttributeType.INT) {
+      return ComparisonUtils.compareTwoINT(left, right, coefficient, operator);
+    } else if (type == AttributeType.DOUBLE){
+      return ComparisonUtils.compareTwoDOUBLE(left, right, operator);
+    } else if (type == AttributeType.VARCHAR) {
+      return ComparisonUtils.compareTwoVARCHAR(left, right, operator);
+    }
     return false;
   }
 
-  public Record getLast() {
+  public CSCI485ClassProject.models.Record getLast() {
     if (isInitialized) {
       return null;
     }
     isInitializedToLast = true;
 
-    Record record = moveToNextRecord(true);
+    CSCI485ClassProject.models.Record record = moveToNextRecord(true);
     if (isPredicateEnabled) {
       while (record != null && !doesRecordMatchPredicate(record)) {
         record = moveToNextRecord(false);
@@ -417,7 +441,7 @@ public class Cursor {
     return isInitialized && iterator != null && (iterator.hasNext() || currentKVPair != null);
   }
 
-  public Record next(boolean isGetPrevious) {
+  public CSCI485ClassProject.models.Record next(boolean isGetPrevious) {
     if (!isInitialized) {
       return null;
     }
@@ -425,7 +449,7 @@ public class Cursor {
       return null;
     }
 
-    Record record = moveToNextRecord(false);
+    CSCI485ClassProject.models.Record record = moveToNextRecord(false);
     if (isPredicateEnabled) {
       while (record != null && !doesRecordMatchPredicate(record)) {
         record = moveToNextRecord(false);
@@ -434,7 +458,7 @@ public class Cursor {
     return record;
   }
 
-  public Record getCurrentRecord() {
+  public CSCI485ClassProject.models.Record getCurrentRecord() {
     return currentRecord;
   }
 
@@ -449,7 +473,7 @@ public class Cursor {
 
   private void deleteOldIndexRecords() {
     List<Object> primaryKeys = getPrimaryKeysFromCurrentRecord();
-
+    if(attrNameToIndexType == null) return;
     for (Map.Entry<String, IndexType> idxPair : attrNameToIndexType.entrySet()) {
       String attrName = idxPair.getKey();
       IndexType attrIdxType = idxPair.getValue();
@@ -464,6 +488,7 @@ public class Cursor {
 
   private void insertNewIndexRecords() {
     List<Object> primaryKeys = getPrimaryKeysFromCurrentRecord();
+    if(attrNameToIndexType==null) return;
     for (Map.Entry<String, IndexType> idxPair : attrNameToIndexType.entrySet()) {
       String attrName = idxPair.getKey();
       IndexType attrIdxType = idxPair.getValue();
@@ -504,7 +529,7 @@ public class Cursor {
         return StatusCode.CURSOR_UPDATE_ATTRIBUTE_NOT_FOUND;
       }
 
-      if (!Record.Value.isTypeSupported(attrValToUpdate)) {
+      if (!CSCI485ClassProject.models.Record.Value.isTypeSupported(attrValToUpdate)) {
         return StatusCode.ATTRIBUTE_TYPE_NOT_SUPPORTED;
       }
 

@@ -3,7 +3,7 @@ package CSCI485ClassProject;
 import CSCI485ClassProject.models.Record;
 
 public abstract class Iterator {
-
+  protected Cursor cursor;
   public enum Mode {
     READ,
     READ_WRITE
@@ -24,4 +24,6 @@ public abstract class Iterator {
   public abstract void commit();
 
   public abstract void abort();
+
+  public Cursor getCursor() { return cursor; }
 }

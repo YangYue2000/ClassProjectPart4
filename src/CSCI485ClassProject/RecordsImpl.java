@@ -2,11 +2,7 @@ package CSCI485ClassProject;
 
 import CSCI485ClassProject.fdb.FDBHelper;
 import CSCI485ClassProject.fdb.FDBKVPair;
-import CSCI485ClassProject.models.AttributeType;
-import CSCI485ClassProject.models.ComparisonOperator;
-import CSCI485ClassProject.models.IndexType;
-import CSCI485ClassProject.models.Record;
-import CSCI485ClassProject.models.TableMetadata;
+import CSCI485ClassProject.models.*;
 import CSCI485ClassProject.utils.IndexesUtils;
 import com.apple.foundationdb.Database;
 import com.apple.foundationdb.Transaction;
@@ -68,7 +64,7 @@ public class RecordsImpl implements Records{
       return StatusCode.DATA_RECORD_PRIMARY_KEYS_UNMATCHED;
     }
 
-    Record record = new Record();
+    CSCI485ClassProject.models.Record record = new CSCI485ClassProject.models.Record();
     // do the input values' type checking
     for (int i = 0; i<primaryKeys.length; i++) {
       StatusCode status = record.setAttrNameAndValue(primaryKeys[i], primaryKeysValues[i]);
@@ -167,6 +163,16 @@ public class RecordsImpl implements Records{
     return new Cursor(mode, tableName, tblMetadata, tx);
   }
 
+//for iterator
+  @Override
+  public Cursor openCursor(String tableName, ComparisonPredicate predicate, Cursor.Mode mode, boolean isUsingIndex){
+    Transaction tx = FDBHelper.openTransaction(db);
+    TableMetadata tblMetadata = getTableMetadataByTableName(tx, tableName);
+    Cursor cursor = new Cursor(mode, tableName, tblMetadata, tx);
+    cursor.enablePredicate(predicate);
+    return cursor;
+  }
+
   @Override
   public Cursor openCursor(String tableName, String attrName, Object attrValue, ComparisonOperator operator, Cursor.Mode mode, boolean isUsingIndex) {
     Transaction tx = FDBHelper.openTransaction(db);
@@ -192,7 +198,7 @@ public class RecordsImpl implements Records{
       }
     }
 
-    Record.Value attrVal = new Record.Value();
+    CSCI485ClassProject.models.Record.Value attrVal = new CSCI485ClassProject.models.Record.Value();
     StatusCode initVal = attrVal.setValue(attrValue);
     if (initVal != StatusCode.SUCCESS) {
       // check if the value's type matches the table schema
@@ -212,22 +218,22 @@ public class RecordsImpl implements Records{
   }
 
   @Override
-  public Record getFirst(Cursor cursor) {
+  public CSCI485ClassProject.models.Record getFirst(Cursor cursor) {
     return cursor.getFirst();
   }
 
   @Override
-  public Record getLast(Cursor cursor) {
+  public CSCI485ClassProject.models.Record getLast(Cursor cursor) {
     return cursor.getLast();
   }
 
   @Override
-  public Record getNext(Cursor cursor) {
+  public CSCI485ClassProject.models.Record getNext(Cursor cursor) {
     return cursor.next(false);
   }
 
   @Override
-  public Record getPrevious(Cursor cursor) {
+  public CSCI485ClassProject.models.Record getPrevious(Cursor cursor) {
     return cursor.next(true);
   }
 
@@ -247,7 +253,7 @@ public class RecordsImpl implements Records{
     if (cursor.getCurrentRecord() == null) {
       return StatusCode.CURSOR_REACH_TO_EOF;
     }
-    Record recordToDelete = cursor.getCurrentRecord();
+    CSCI485ClassProject.models.Record recordToDelete = cursor.getCurrentRecord();
     Set<String> attrDiffSet = new HashSet<>();
     Transaction tx = cursor.getTx();
 
@@ -256,7 +262,7 @@ public class RecordsImpl implements Records{
             new Cursor(Cursor.Mode.READ, cursor.getTableName(), cursor.getTableMetadata(), tx);
     boolean isScanCursorInit = false;
     while (true) {
-      Record record;
+      CSCI485ClassProject.models.Record record;
       if (!isScanCursorInit) {
         isScanCursorInit = true;
         record = getFirst(scanCursor);
