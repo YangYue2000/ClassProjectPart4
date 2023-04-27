@@ -234,58 +234,58 @@ public class Part4Test {
   }
 
 
-//  @Test
-//  public void unitTest2 () {
-//    Iterator projectIterator = relAlgOperators.project(EmployeeTableName, DNO, false);
-//    Random randomGenerator = new Random(randSeed);
-//
-//    Set<Long> expectDnoSet = new HashSet<>();
-//    for (int i = 0; i<initialNumberOfRecords; i++) {
-//      long dno = getDno(randomGenerator, dnoLB, dnoUB);
-//      Record record = projectIterator.next();
-//      assertNotNull(record);
-//
-//      Record expectRecord = new Record();
-//      expectRecord.setAttrNameAndValue(DNO, dno);
-//
-//      assertEquals(dno, record.getValueForGivenAttrName(DNO));
-//      expectDnoSet.add(dno);
-//    }
-//
-//    List<Record> inorderDnoRecords = relAlgOperators.simpleProject(EmployeeTableName, DNO, true);
-//    List<Long> actualDnoList = new ArrayList<>();
-//
-//    for (Record record : inorderDnoRecords) {
-//      actualDnoList.add((Long) record.getValueForGivenAttrName(DNO));
-//    }
-//
-//    List<Long> expectDnoList = new ArrayList<>(expectDnoSet);
-//    java.util.Collections.sort(expectDnoList);
-//    assertEquals(expectDnoList, actualDnoList);
-//
-//    ComparisonPredicate predicate = new ComparisonPredicate(SSN, AttributeType.INT, ComparisonOperator.LESS_THAN, 50);
-//    Iterator selectRes = relAlgOperators.select(EmployeeTableName, predicate, Iterator.Mode.READ_WRITE, false);
-//    assertNotNull(selectRes);
-//
-//
-//    Iterator emailRecordIterator = relAlgOperators.project(selectRes, Email, true);
-//    Set<String> expectedEmailSet = new HashSet<>();
-//    Set<String> actualEmailSet = new HashSet<>();
-//
-//    for (int i = 0; i < 50; i++) {
-//      Record record = emailRecordIterator.next();
-//      assertNotNull(record);
-//
-//      expectedEmailSet.add(getEmail(i));
-//      actualEmailSet.add((String) record.getValueForGivenAttrName(Email));
-//    }
-//
-//    assertNull(emailRecordIterator.next());
-//    emailRecordIterator.commit();
-//
-//    assertEquals(expectedEmailSet, actualEmailSet);
-//    System.out.println("Test2 passed!");
-//  }
+  @Test
+  public void unitTest2 () {
+    Iterator projectIterator = relAlgOperators.project(EmployeeTableName, DNO, false);
+    Random randomGenerator = new Random(randSeed);
+
+    Set<Long> expectDnoSet = new HashSet<>();
+    for (int i = 0; i<initialNumberOfRecords; i++) {
+      long dno = getDno(randomGenerator, dnoLB, dnoUB);
+      Record record = projectIterator.next();
+      assertNotNull(record);
+
+      Record expectRecord = new Record();
+      expectRecord.setAttrNameAndValue(DNO, dno);
+
+      assertEquals(dno, record.getValueForGivenAttrName(DNO));
+      expectDnoSet.add(dno);
+    }
+
+    List<Record> inorderDnoRecords = relAlgOperators.simpleProject(EmployeeTableName, DNO, true);
+    List<Long> actualDnoList = new ArrayList<>();
+
+    for (Record record : inorderDnoRecords) {
+      actualDnoList.add((Long) record.getValueForGivenAttrName(DNO));
+    }
+
+    List<Long> expectDnoList = new ArrayList<>(expectDnoSet);
+    java.util.Collections.sort(expectDnoList);
+    assertEquals(expectDnoList, actualDnoList);
+
+    ComparisonPredicate predicate = new ComparisonPredicate(SSN, AttributeType.INT, ComparisonOperator.LESS_THAN, 50);
+    Iterator selectRes = relAlgOperators.select(EmployeeTableName, predicate, Iterator.Mode.READ_WRITE, false);
+    assertNotNull(selectRes);
+
+
+    Iterator emailRecordIterator = relAlgOperators.project(selectRes, Email, true);
+    Set<String> expectedEmailSet = new HashSet<>();
+    Set<String> actualEmailSet = new HashSet<>();
+
+    for (int i = 0; i < 50; i++) {
+      Record record = emailRecordIterator.next();
+      assertNotNull(record);
+
+      expectedEmailSet.add(getEmail(i));
+      actualEmailSet.add((String) record.getValueForGivenAttrName(Email));
+    }
+
+    assertNull(emailRecordIterator.next());
+    emailRecordIterator.commit();
+
+    assertEquals(expectedEmailSet, actualEmailSet);
+    System.out.println("Test2 passed!");
+  }
 
   @Test
   public void unitTest3 () {
@@ -414,35 +414,35 @@ public class Part4Test {
     System.out.println("Test5 passed!");
   }
 
-//  @Test
-//  public void unitTest6() {
-//    // delete Department with DNO=40
-//    ComparisonPredicate dnoEq40predicate =
-//        new ComparisonPredicate(DNO, AttributeType.INT, ComparisonOperator.EQUAL_TO, 40);
-//
-//    Iterator departmentIterator = relAlgOperators.select(DepartmentTableName, dnoEq40predicate, Iterator.Mode.READ_WRITE, false);
-//    assertNotNull(departmentIterator);
-//
-//    assertEquals(StatusCode.SUCCESS, relAlgOperators.delete(DepartmentTableName, departmentIterator));
-//
-//    // verify the deletion
-//    departmentIterator = relAlgOperators.select(DepartmentTableName, dnoEq40predicate, Iterator.Mode.READ, false);
-//    assertNotNull(departmentIterator);
-//    assertNull(departmentIterator.next());
-//    departmentIterator.commit();
-//
-//
-//    Iterator employeeIterator = relAlgOperators.select(EmployeeTableName, dnoEq40predicate, Iterator.Mode.READ_WRITE, false);
-//    assertNotNull(employeeIterator);
-//
-//    assertEquals(StatusCode.SUCCESS, relAlgOperators.delete(EmployeeTableName, employeeIterator));
-//
-//    // verify the deletion
-//    employeeIterator = relAlgOperators.select(EmployeeTableName, dnoEq40predicate, Iterator.Mode.READ, false);
-//    assertNotNull(employeeIterator);
-//    assertNull(employeeIterator.next());
-//    employeeIterator.commit();
-//
-//    System.out.println("Test6 passed!");
-//  }
+  @Test
+  public void unitTest6() {
+    // delete Department with DNO=40
+    ComparisonPredicate dnoEq40predicate =
+        new ComparisonPredicate(DNO, AttributeType.INT, ComparisonOperator.EQUAL_TO, 40);
+
+    Iterator departmentIterator = relAlgOperators.select(DepartmentTableName, dnoEq40predicate, Iterator.Mode.READ_WRITE, false);
+    assertNotNull(departmentIterator);
+
+    assertEquals(StatusCode.SUCCESS, relAlgOperators.delete(DepartmentTableName, departmentIterator));
+
+    // verify the deletion
+    departmentIterator = relAlgOperators.select(DepartmentTableName, dnoEq40predicate, Iterator.Mode.READ, false);
+    assertNotNull(departmentIterator);
+    assertNull(departmentIterator.next());
+    departmentIterator.commit();
+
+
+    Iterator employeeIterator = relAlgOperators.select(EmployeeTableName, dnoEq40predicate, Iterator.Mode.READ_WRITE, false);
+    assertNotNull(employeeIterator);
+
+    assertEquals(StatusCode.SUCCESS, relAlgOperators.delete(EmployeeTableName, employeeIterator));
+
+    // verify the deletion
+    employeeIterator = relAlgOperators.select(EmployeeTableName, dnoEq40predicate, Iterator.Mode.READ, false);
+    assertNotNull(employeeIterator);
+    assertNull(employeeIterator.next());
+    employeeIterator.commit();
+
+    System.out.println("Test6 passed!");
+  }
 }

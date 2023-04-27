@@ -37,17 +37,27 @@ public class RelationalAlgebraOperatorsImpl implements RelationalAlgebraOperator
 
   @Override
   public Iterator project(String tableName, String attrName, boolean isDuplicateFree) {
-    return null;
+    return new ProjectIterator(tableName,attrName,isDuplicateFree);
   }
 
   @Override
   public Iterator project(Iterator iterator, String attrName, boolean isDuplicateFree) {
-    return null;
+    return new ProjectIterator(iterator,attrName,isDuplicateFree);
   }
 
   @Override
   public List<Record> simpleProject(String tableName, String attrName, boolean isDuplicateFree) {
-    return null;
+    ProjectIterator projectIterator = new ProjectIterator(tableName,attrName,isDuplicateFree);
+    Record rec;
+    List<Record> res = new ArrayList<>();
+    while (true) {
+      rec = projectIterator.next();
+      if (rec == null) {
+        break;
+      }
+      res.add(rec);
+    }
+    return res;
   }
 
   @Override
@@ -134,6 +144,18 @@ public class RelationalAlgebraOperatorsImpl implements RelationalAlgebraOperator
 
   @Override
   public StatusCode delete(String tableName, Iterator iterator) {
-    return null;
+    RecordsImpl records = new RecordsImpl();
+    Record rec;
+    while(true){
+      rec = iterator.next();
+      if(rec==null){
+        records.commitCursor(iterator.getCursor());
+        return StatusCode.SUCCESS;
+      }
+      StatusCode deleteStatusCode = records.deleteRecord(iterator.getCursor());
+      if(deleteStatusCode!=StatusCode.SUCCESS) {
+        return deleteStatusCode;
+      }
+    }
   }
 }

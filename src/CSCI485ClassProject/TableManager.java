@@ -31,7 +31,8 @@ public interface TableManager {
   public StatusCode createTable(String tableName, String[] attributeNames,
                                 AttributeType[] attributeTypes, String[] primaryKeyAttributeNames);
 
-
+  public StatusCode createProjectTable(String tableName, String[] attributeNames, AttributeType[] attributeType,
+                                String[] primaryKeyAttributeNames);
   /**
    * Delete a table by its name
    *

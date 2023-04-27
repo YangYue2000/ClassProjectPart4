@@ -28,6 +28,32 @@ public class TableManagerImpl implements TableManager{
   }
 
   @Override
+  public StatusCode createProjectTable(String tableName, String[] attributeNames, AttributeType[] attributeType,
+                                       String[] primaryKeyAttributeNames){
+    Transaction tx = FDBHelper.openTransaction(db);
+    TableMetadata tblMetadata = new TableMetadata();
+    HashMap<String, AttributeType> attributes = new HashMap<>();
+    for (int i = 0; i < attributeNames.length; i++) {
+      attributes.put(attributeNames[i], attributeType[i]);
+    }
+
+    String projectTableName = "project"+tableName;
+    tblMetadata.setAttributes(attributes);
+    tblMetadata.setPrimaryKeys(Arrays.asList(primaryKeyAttributeNames));
+    // persist the creation
+    TableMetadataTransformer transformer = new TableMetadataTransformer(projectTableName);
+    DirectorySubspace tableAttrSpace = FDBHelper.createOrOpenSubspace(tx, transformer.getTableAttributeStorePath());
+
+    List<FDBKVPair> pairs = transformer.convertToFDBKVPairs(tblMetadata);
+    for (FDBKVPair kvPair : pairs) {
+      FDBHelper.setFDBKVPair(tableAttrSpace, tx, kvPair);
+    }
+    FDBHelper.commitTransaction(tx);
+
+    return StatusCode.SUCCESS;
+  }
+
+  @Override
   public StatusCode createTable(String tableName, String[] attributeNames, AttributeType[] attributeType,
                                 String[] primaryKeyAttributeNames) {
     // your code
